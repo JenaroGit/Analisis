@@ -6,15 +6,25 @@
 using namespace std;
 
 
-//Variables globales.
+//Variables globales
 int nodosLista = 0; //Variable para llevar un conteo de la cantidad de nodos de la lista
 int ready = 0; //Variable apra determinar si una palabra existe en el diccionario
+int input; //Determinara cual sera la entrada del texto
+int sensitive; //Determina si la entrada sera case sensitive
+
+int caracteres = 0;
+int palabras = 0;
+int unicas = 0;
+int comparaciones = 0;
+int ejecuciones = 0;
+
 
 
 //Estructuras
 struct Nodo{
 	int prioridad;
 	int posicion;
+	int linea;
 	string dato;
 	Nodo *der;
 	Nodo *izq;
@@ -26,33 +36,46 @@ Nodo *arbol = NULL;
 struct Lista{
 	int uso;
 	int posc;
+	int line;
 	string palabra;
 	Lista *siguiente;
 };
 Lista *primero, *ultimo;
 
 
-//Prototipos
-void leer_archivo();
+//PROTOTIPOS
 Nodo *crearNodo(string, Nodo *, int, int);
-void insertarNodo(Nodo *&, string, Nodo *, int, int);
+Lista *crearLista(string, int, int, int);
+void leer_archivo();
+void insertarNodo(Nodo *&, string, Nodo *, int, int, int);
 void recorrer (Nodo *&);
 void rotIzq(Nodo *&);
 void rotDer(Nodo *&);
 void buscar(Nodo *, string);
-Lista *crearLista(string, int, int);
-void insertarLista(string, int, int);
+void insertarLista(string, int, int, int);
 void aumentar(Nodo *, string);
 void ordenar (Nodo *&);
 void inOrden(Nodo *);
 void crearArchivo(Lista *);
 void crearArchivo2(Lista *);
-void evaluar(string, int, int);
+void evaluar(string, int, int, int);
+void menu();
+void histograma();
+void entrada();
+void caseSensitive();
+void buscarPalabra(Nodo *, string);
+
+void mostrar (Lista *);
+void mostrar2 (Lista *);
 
 
 
 
 int main (){
+
+	entrada(); //Llama la funcion que determina la entrada de texto
+
+	caseSensitive(); //Llama la funcion que determina si la entrada sera case sensitive
 
 	leer_archivo(); //llama a la funciona que abre un archivo
 
@@ -60,13 +83,148 @@ int main (){
 
 	inOrden(arbol); //llama a la funcion que recorre el arbol en orden
 
+	menu(); //Llama a la funcion encargada de imprimir y trabajar sobre el menu
+
 	crearArchivo(primero); //Llama a la función crearArchivo
 
-	return 0; //retorna 0
+	return 0;
+
 }
 
 
 
+//Funcion que determina la entrada de texto
+//NO recibe nada
+//NO retorna nada
+void entrada(){
+	do{
+		cout << "\n.:Entrada del texto:.\n" << endl;
+		cout << "1. Entrada por terminal" << endl; //Imprime la opcion 1
+		cout << "2. Entrada por archivo de texto" << endl; //Imprime la opcion 2
+		cin >> input; //Recibe la entrada y la guarda en input
+
+		switch(input){
+
+			case 1: cout<<"\nUsted eligio entrada por terminal\n\n";
+				cout<<"\n";
+				//Llamar a la funcion requerida
+				break;
+
+			case 2: cout<<"\nUsted eligio entrada por archivo de texto\n\n";
+				cout<<"\n";
+				//Llamar a la funcion requerida
+				break;
+		
+			default:cout<<"\nOpcion no valida!!!\n\n";
+		}
+	}while (input !=1 && input != 2); //Mientras la opcion no sea valida
+}
+
+
+
+//Funcion que determina si la entrada es sensible a mayusculas
+///NO recibe nada
+//NO retorna nada
+void caseSensitive(){
+	do{
+		cout<<"\n.:Sensibilidad a Mayúsculas:.\n"<<endl;
+		cout << "1. Sensible a mayusculas" << endl; //Imprime la opcion 1
+		cout << "2. No sensible a mayusculas" << endl; //Imprime la opcion 2
+		cin >> sensitive; //Recibe la entrada y la guarda en sensitive
+
+		switch(sensitive){
+
+			case 1: cout<<"\nUsted eligio sensible a mayusculas\n\n";
+				cout<<"\n";
+				//Llamar a la funcion requerida
+				break;
+
+			case 2: cout<<"\nUsted eligio no sensible a mayusculas\n\n";
+				cout<<"\n";
+				//Llamar a la funcion requerida
+				break;
+		
+			default:cout<<"\nOpcion no valida!!!\n\n";
+		}
+	}while (sensitive !=1 && sensitive != 2); //Mientras la opcion no sea valida
+	
+}
+
+
+
+//Funcion que imprime un menu
+///NO recibe nada
+//NO retorna nada
+void menu(){
+	int opcion;
+	string busqueda;
+	
+	do{
+		cout<<"\t.:MENU:."<<endl;
+		cout<<"1. Ver histograma"<<endl;
+		cout<<"2. Mostrar el diccionario de palabras"<<endl;
+		cout<<"3. Mostrar el diccionario de palabras con posicicones"<<endl;
+		cout<<"4. Buscar palabra"<<endl;
+		cout<<"5. Buscar prefijo"<<endl;
+		cout<<"6. Ver estadísticas"<<endl;
+		cout<<"7. Salir"<<endl;
+		cout<<"\nOpcion: ";
+		cin>>opcion;
+
+		switch(opcion){
+
+			case 1: cout<<"\nMostrando el histograma\n\n";
+				cout<<"\n";
+				break;
+
+			case 2: cout<<"\nMostrando el diccionario de palabras\n\n";
+				mostrar (primero);
+				cout<<"\n";
+				break;
+
+			case 3: cout<<"\nMostrando el diccionario de palabras con posiciones\n\n";
+				mostrar2(primero);
+				cout<<"\n";
+				break;
+
+			case 4: cout<<"\nBuscar palabra\n\n";				
+				cout<<"Ingrese la palabra a buscar: ";
+				cin>>busqueda;
+				buscarPalabra(arbol, busqueda);
+				if (ready == 0){
+					cout << "\nPalabra no encontrada!!!";
+				}
+				else{
+					ready = 0;
+				}
+				cout<<"\n\n";
+				break;
+
+			case 5: cout<<"\nBuscar prefijo\n\n";
+				cout<<"Ingrese el prefijo a buscar: ";
+				cin>>busqueda;
+				cout<<"\nPalabras encontradas:\n\n";
+				buscar(arbol, busqueda);
+				cout<<"\n\n";
+				break;
+
+			case 6: cout<<"\nMostrando estadísticas\n\n";
+				cout << "Caracteres leidos: " << caracteres << endl;
+				cout << "Palabras totales: " << palabras << endl;
+				cout << "Palabras unicas: " << unicas << endl;
+				cout << "Comparciones realizadas: " << comparaciones << endl;
+				cout<<"\n";
+				break;
+
+			case 7: system("clear");
+				break;
+	
+			default:cout << "\nOpción inválida!!!\n";				
+				break;
+
+		}
+	}while(opcion != 7);//Mientras la opcion no sea salir
+}
 
 
 
@@ -80,16 +238,17 @@ void leer_archivo(){
 	rewind (flujo); //mueve el flujo al inicio
 	char caracter[1]; //variable que guaradara el valor del caracter leido
 	string mensaje; //Variable que guardara la palabra ingresada
-
 	int posicion = 1; //variable que guardara la posicion de la palabra en el diccionario
 	int prioridad = 1; //variable que guardara la priordad
+	
+	int linea = 1;
 
 	while (!feof(flujo)){//Mientras no sea el final del archivo
 		fscanf(flujo,"%c",caracter);//Escanea el archivo y guarda un caracter en caracter
 
 		if ((string) caracter == " " || (string) caracter == "\n"){ //Si el caracter es un delimitador
 			if (mensaje != ""){ //Si el mensaje no esta vacio
-				evaluar(mensaje, prioridad, posicion); //Se llama a la funcion que evalua lo que entra
+				evaluar(mensaje, prioridad, posicion, linea); //Se llama a la funcion que evalua lo que entra
 				mensaje = ""; //Se reinicia mensjae	
 				posicion++; //Se aumenta la posicion de la palabra
 			}
@@ -98,34 +257,43 @@ void leer_archivo(){
 		else{ //Si el caracter no es un delimitador
 			mensaje += caracter; //Se le almacena el caracter dentro de mensaje
 		}
+
+		if ((string) caracter == "\n")
+			linea++;
+		caracteres++;
 	}
+	caracteres--;
 }
 
 
 //Funcion para evaluar el texto de entrada
 //Recibe un string
 //No retotna nada
-void evaluar(string palabra, int prioridad, int posicion){
+void evaluar(string palabra, int prioridad, int posicion, int linea){
+	palabras++;
 	aumentar(arbol, palabra); //Llama a la funcion aumentar
 	if (ready == 0){ //Si la palabra no se encuentra dentro del arbol
-		insertarNodo(arbol, palabra, NULL, prioridad, posicion); //Llama a insertar el nodo en el árbol	
+		insertarNodo(arbol, palabra, NULL, prioridad, posicion, linea); //Llama a insertar el nodo en el árbol	
+		unicas++;
 	}
 	else{ //Si la palabra se encontro en el arbol
 		ready = 0; //Reinicia la variable global ready
+		unicas--;
 	}
 }
 
 
 
 //Funcion para crear un nuevo nodo.
-//Recibe la raíz del árbol, la palabra a insertar, el padre del nodo actual, la prioridad de la palabra, la fila y la columna donde se encuentra
+//Recibe la raíz del árbol, la palabra a insertar, el padre del nodo actual, la prioridad de la palabra, la linea y la columna donde se encuentra
 //Retorna el nodo creado
-Nodo *crearNodo(string dato, Nodo *padre, int prioridad, int posicion){ 
+Nodo *crearNodo(string dato, Nodo *padre, int prioridad, int posicion, int linea){ 
 	Nodo *nuevo_nodo = new Nodo(); //Crea un nuevo nodo
 
 	nuevo_nodo->prioridad = prioridad; //Prioridad pasa a ser la prioridad leída
 	
 	nuevo_nodo->posicion = posicion;
+	nuevo_nodo->linea = linea;
 
 	nuevo_nodo->dato = dato; //Dato pasa a ser la palabra leída
 	nuevo_nodo->der = NULL; //Hijo derecho = NULL, pues no se sabe si tendrá
@@ -137,23 +305,23 @@ Nodo *crearNodo(string dato, Nodo *padre, int prioridad, int posicion){
 
 
 //Funcion para insertar elementos en el arbol.
-//Recibe la raíz del árbol, la palabra a insertar, el padre del nodo actual, la prioridad de la palabra, la fila y la columna donde se encuentra
-void insertarNodo(Nodo *&arbol, string dato, Nodo *padre, int prioridad, int posicion){ 
+//Recibe la raíz del árbol, la palabra a insertar, el padre del nodo actual, la prioridad de la palabra, la linea y la columna donde se encuentra
+void insertarNodo(Nodo *&arbol, string dato, Nodo *padre, int prioridad, int posicion, int linea){ 
 	if(arbol == NULL){ //Si el arbol esta vacio
-		Nodo *nuevo_nodo = crearNodo(dato, padre, prioridad, posicion); //Llama a la función para crear el nuevo nodo
+		Nodo *nuevo_nodo = crearNodo(dato, padre, prioridad, posicion, linea); //Llama a la función para crear el nuevo nodo
 		arbol = nuevo_nodo; //Nodo actual = nuevo nodo.
 	}
 	else{ //Si el arbol tiene uno o mas nodos
 		string valorRaiz = arbol->dato; //Obtenemos el valor de la raiz
 		if(dato < valorRaiz){ //Si el elemento es menor que la raiz, insertamos en izq
-			insertarNodo(arbol->izq, dato, arbol, prioridad, posicion); //Llama a la función para insertar los nodos
+			insertarNodo(arbol->izq, dato, arbol, prioridad, posicion, linea); //Llama a la función para insertar los nodos
 			if (arbol->izq != nullptr && arbol->izq->prioridad > arbol->prioridad){ //Si el hijo izq tiene una prioridad mayor al nodo actual
 				rotDer(arbol); //Llama a rotarDer
 			}
 		}
 		else{ //Si el elemento es mayor que la raiz, insertamos en der
-			insertarNodo(arbol->der, dato, arbol, prioridad, posicion);//Llama a la función para insertar los nodos
-			if(arbol->der != nullptr && arbol->der->prioridad > arbol->prioridad){//Si el hijo der tiene una prioridad mayor al nodo actual
+			insertarNodo(arbol->der, dato, arbol, prioridad, posicion, linea);//Llama a la función para insertar los nodos
+			if(arbol->der != nullptr && arbol->der->prioridad > arbol->prioridad, linea){//Si el hijo der tiene una prioridad mayor al nodo actual
 				rotIzq(arbol);//Llama a rotarIzq
 			}
 		}
@@ -164,6 +332,7 @@ void insertarNodo(Nodo *&arbol, string dato, Nodo *padre, int prioridad, int pos
 //Funcion para recorrer y rotar el arbol.
 //Recibe la raíz
 void recorrer (Nodo *&arbol){
+	comparaciones++;
 	if (arbol == NULL){ //Si el árbol está vacío
 		return; //NO retorna nada
 	}
@@ -204,6 +373,7 @@ void rotDer(Nodo *&arbol) {
 //Funcion para buscar las posibles palabras.
 //Recibe la raíz del árbol y el dato a buscar
 void buscar(Nodo *arbol, string c){
+	comparaciones++;
 	int value = 0;  //variable para saber si se encuentra una palabra
 	int largo = c.length(); //determina el largo del dato
 	if (arbol == NULL){ //Si el árbol está vacío
@@ -218,7 +388,7 @@ void buscar(Nodo *arbol, string c){
 		}
 
 		if (value == 0){ //Si el valor de value = 0
-			cout << arbol->dato;
+			cout << arbol->dato << "\n";
 		}
 		buscar(arbol->izq, c); //se llama la funcion para buscar otras palabras
 		buscar(arbol->der, c); //se llama la funcion para buscar otras palabras
@@ -227,14 +397,15 @@ void buscar(Nodo *arbol, string c){
 
 
 //Funcion para crear un nuevo nodo de la lista.
-//Recibe la palabra a insertar, el uso y la fila y columna de la misma
+//Recibe la palabra a insertar, el uso y la linea y columna de la misma
 //Retorna el nodo creado
-Lista *crearLista(string palabra, int uso, int posc){
+Lista *crearLista(string palabra, int uso, int posc, int line){
 	Lista *nuevo_nodo = new Lista(); //Crea un nuevo nodo tipo lista
 
 	nuevo_nodo->uso = uso; //uso = cantidad de veces que se ha usado la palabra
 
 	nuevo_nodo->posc = posc;
+	nuevo_nodo->line = line;
 
 	nuevo_nodo->palabra = palabra; //palabra del nodo actual = a la palabra leída
 	nuevo_nodo->siguiente = NULL; //nodo siguiente = NULL, pues no se sabe si habrá
@@ -244,16 +415,16 @@ Lista *crearLista(string palabra, int uso, int posc){
 
 
 //Funcion para insertar elementos en la lista.
-//Recibe la palabra a insertar, el uso y la fila y columna de la misma
-void insertarLista(string palabra, int uso, int posc){
+//Recibe la palabra a insertar, el uso y la linea y columna de la misma
+void insertarLista(string palabra, int uso, int posc, int line){
 	if(primero == NULL){ //Si la lista esta vacia
-		Lista *nuevo_nodo = crearLista(palabra, uso, posc); //Llama a la función encargada de crear un nuevo nodo de la lista
+		Lista *nuevo_nodo = crearLista(palabra, uso, posc, line); //Llama a la función encargada de crear un nuevo nodo de la lista
 		primero = nuevo_nodo; //El nuevo nodo pasa a ser el primero
 		ultimo = nuevo_nodo; //El nuevo nodo pasa a ser el último
 		nodosLista++; //Se incrementa en 1 el contador de nodos de la lista
 	}
 	else{ //Si la lista tiene uno o mas nodos
-		Lista *nuevo_nodo = crearLista(palabra, uso, posc); //Llama a la función encargada de crear un nuevo nodo de la lista
+		Lista *nuevo_nodo = crearLista(palabra, uso, posc, line); //Llama a la función encargada de crear un nuevo nodo de la lista
 		ultimo->siguiente = nuevo_nodo; //Inserta el nuevo nodo al final de la lista
 		ultimo = nuevo_nodo; //Determina al nuevo nodo como el último
 		nodosLista++; //Incrementa en 1 la cantidad de nodos en la lista
@@ -264,6 +435,7 @@ void insertarLista(string palabra, int uso, int posc){
 //Funcion para aumentar el conteo de veces de la palabra.
 //Recibe la raíz del árbol y la palabra a buscar
 void aumentar(Nodo *arbol, string palabra){
+	comparaciones++;
 	if (arbol == NULL){//Si el arbol es vacio
 		return; //No retorna nada
 	}
@@ -280,6 +452,7 @@ void aumentar(Nodo *arbol, string palabra){
 //Funcion para recorrer y rotar el arbol.
 //Recibe la raíz
 void ordenar (Nodo *&arbol){
+	comparaciones++;
 	if (arbol == NULL){ //Si el árbol está vacío
 		return; //NO retorna nada
 	}
@@ -302,7 +475,7 @@ void inOrden(Nodo *arbol){
 	}
 	else{ //Si hay nodos
 		inOrden(arbol->izq); //Recorre el árbol por la izquierda
-		insertarLista (arbol->dato, arbol->prioridad, arbol->posicion); //Llama a insertar el nodo en la lista
+		insertarLista (arbol->dato, arbol->prioridad, arbol->posicion, arbol->linea); //Llama a insertar el nodo en la lista
 		inOrden(arbol->der); //Recorre el árbol por la derecha
 	}
 }
@@ -326,7 +499,47 @@ void crearArchivo(Lista *nodo){
 void crearArchivo2(Lista *nodo){
 	ofstream file("diccionario.txt"); //determina el archivo a trabajar
 	for(int i=0; i<nodosLista; i++){ //Ciclo que cuenta la cantidad de nodos que posee la lista
-		file << nodo->palabra << "\tApariciones: " << nodo->uso << "\tPalabra: " << nodo->posc << "\n"; //agrega los datos necesarios al archivo creado
+		file << nodo->palabra << " " << nodo->uso << " " << nodo->line << " " << nodo->posc << "\n"; //agrega los datos necesarios al archivo creado
 		nodo = nodo->siguiente; //Nodo actual pasa a ser el nodo siguiente
+	}
+}
+
+
+//Funcion para buscar una palabra.
+//Recibe la raíz del árbol y la palabra a buscar
+void buscarPalabra(Nodo *arbol, string palabra){
+	comparaciones++;
+	if (arbol == NULL){//Si el arbol es vacio
+		return; //No retorna nada
+	}
+	else if (arbol->dato == palabra){ //Si la palabra = al dato del nodo actual
+		cout << "\nPalabra encontrada: " << arbol->dato << "\nUso: " << arbol->prioridad << "\nNumero de linea: " << arbol->linea << "\nPosicion en el texto: " << arbol->posicion;
+		ready = 1;
+		return;
+	}
+	
+	buscarPalabra(arbol->izq, palabra); //sigue recorriendo el árbol
+	buscarPalabra(arbol->der, palabra); //sigue recorriendo el árbol
+}
+
+
+//Funcion muestra la lista ordenada de las palabras del diccionario y su <<prioridad>>
+//Recibe la raíz del árbol y la palabra a buscar
+void mostrar (Lista *primero){
+	Lista *aux = primero;
+	for (int i=0; i < nodosLista; i++){
+		cout<<"\nPalabra: "<<aux->palabra << "\nUso: " << aux->uso << endl;
+		aux = aux->siguiente;
+	}
+}
+
+
+//Funcion muestra la lista ordenada de las palabras del diccionario y su <<prioridad>>
+//Recibe la raíz del árbol y la palabra a buscar
+void mostrar2 (Lista *primero){
+	Lista *aux = primero;
+	for (int i=0; i < nodosLista; i++){
+		cout<<"\nPalabra: "<<aux->palabra << "\nUso: " << aux->uso << "\nNumero de linea: " << aux->line << "\nPosicion: " << aux->posc << "\n";
+		aux = aux->siguiente;
 	}
 }
