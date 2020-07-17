@@ -279,9 +279,8 @@ void elegir_entrada(){
 }
 
 int main(){
-	leer_archivo();
-	for (map <string,int>::iterator it = caracteres.begin(); it != caracteres.end(); ++it)
-		cout << it->first << "=" << it->second << endl;
+	crear_delimitadores();
+	elegir_entrada();
 	cout << "Numero de caracteres: " << num_char << endl;
 	return 0;
 }
